@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Control Tower</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,300&family=DM+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg:        #F7F5F1;
+  --surface:   #FFFFFF;
+  --surface2:  #F4F2EE;
+  --border:    #E8E4DF;
+  --border2:   #D8D4CF;
+  --text:      #2B2B2B;
+  --text2:     #7A7A7A;
+  --text3:     #B0AAA4;
+
+  --peri:      #A8B8F0;
+  --peri-t:    rgba(168,184,240,0.13);
+  --peri-b:    rgba(168,184,240,0.30);
+  --blue:      #C9D5F5;
+  --lav:       #DCC7EF;
+  --lav-t:     rgba(220,199,239,0.22);
+  --pink:      #F0A6F7;
+  --pink-t:    rgba(240,166,247,0.20);
+  --magenta:   #D88BE7;
+  --lime:      #D9DC2E;
+  --lime-t:    rgba(217,220,46,0.14);
+  --lime-s:    #B8BB1A;
+
+  --font: 'DM Sans', system-ui, sans-serif;
+  --mono: 'DM Mono', monospace;
+  --r:  12px;
+  --r2: 7px;
+  --max: 880px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: var(--font); background: var(--bg); color: var(--text);
+  font-size: 14px; line-height: 1.5; min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 10px; }
+
+/* ── HEADER ─────────────────────────────────────────────────────── */
+.header {
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  padding: 0 22px; height: 50px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 100;
+}
+.hbrand { display: flex; align-items: center; gap: 9px; }
+.hmark {
+  width: 22px; height: 22px; background: var(--peri); border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: #fff; flex-shrink: 0;
+}
+.hname  { font-size: 14px; font-weight: 600; color: var(--text); letter-spacing: -0.3px; }
+.hsep   { width: 1px; height: 13px; background: var(--border2); }
+.hdate  { font-size: 12px; color: var(--text2); }
+.hsaved { font-size: 11px; color: var(--text3); }
+.hactions { display: flex; align-items: center; gap: 7px; }
+
+/* ── BUTTONS ────────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-family: var(--font); font-size: 13px; font-weight: 500;
+  padding: 5px 13px; border-radius: var(--r2);
+  cursor: pointer; border: 1px solid transparent; transition: all .13s; line-height: 1;
+}
+.btn-ghost { background: transparent; color: var(--text2); border-color: var(--border); }
+.btn-ghost:hover { border-color: var(--border2); color: var(--text); }
+.btn-peri  { background: var(--peri); color: #fff; border-color: var(--peri); }
+.btn-peri:hover { background: #8fa4e8; }
+.btn-sm    { padding: 4px 10px; font-size: 12px; }
+.btn-link  { background: none; border: none; font-family: var(--font); font-size: 11px; color: var(--text3); cursor: pointer; padding: 0; text-decoration: underline; text-underline-offset: 2px; }
+.btn-link:hover { color: var(--text2); }
+
+.icon-btn {
+  background: none; border: none; color: var(--text3); cursor: pointer;
+  padding: 3px 5px; border-radius: 4px; font-size: 13px; line-height: 1;
+  transition: color .12s, background .12s;
+}
+.icon-btn:hover { color: var(--text); background: var(--surface2); }
+.icon-btn.del:hover { color: #c04040; }
+
+/* ── LAYOUT ─────────────────────────────────────────────────────── */
+.main { max-width: var(--max); margin: 0 auto; padding: 18px 18px 60px; display: flex; flex-direction: column; gap: 10px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); }
+.card-head { display: flex; align-items: center; justify-content: space-between; padding: 13px 16px 0; }
+.card-body { padding: 10px 16px 15px; }
+.slabel { font-size: 10px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text3); }
+.scaption { font-size: 11px; color: var(--text3); }
+
+/* ── PROGRESS CARD ──────────────────────────────────────────────── */
+.prog-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 14px 16px;
+  display: flex; align-items: center; gap: 16px;
+}
+.prog-bar-wrap { flex: 1; }
+.prog-bar-track { height: 6px; background: var(--surface2); border-radius: 10px; overflow: hidden; margin-top: 6px; }
+.prog-bar-fill  { height: 100%; background: var(--lime); border-radius: 10px; transition: width .4s ease; min-width: 2px; }
+.prog-label { font-size: 12px; color: var(--text2); display: flex; justify-content: space-between; }
+.prog-label strong { color: var(--text); font-weight: 600; }
+.prog-pct { font-size: 22px; font-weight: 700; color: var(--text); letter-spacing: -1px; flex-shrink: 0; }
+
+/* ── TODAY'S OUTCOMES ───────────────────────────────────────────── */
+.outcomes-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r); border-left: 3px solid var(--peri);
+}
+.outcomes-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px 0; }
+.outcomes-progress { font-size: 12px; font-weight: 600; color: var(--peri); }
+.outcome-list { padding: 8px 16px 14px; display: flex; flex-direction: column; gap: 4px; }
+.outcome-item { display: flex; align-items: center; gap: 9px; padding: 5px 0; }
+.outcome-cb {
+  -webkit-appearance: none; appearance: none; flex-shrink: 0;
+  width: 16px; height: 16px; border: 2px solid var(--border2); border-radius: 4px;
+  cursor: pointer; position: relative; background: var(--surface); transition: all .13s;
+}
+.outcome-cb:checked { background: var(--lime); border-color: var(--lime-s); }
+.outcome-cb:checked::after {
+  content: ''; position: absolute; left: 3px; top: 0px;
+  width: 6px; height: 9px; border: 2px solid #fff; border-top: none; border-left: none;
+  transform: rotate(45deg);
+}
+.outcome-text { flex: 1; font-size: 14px; color: var(--text); }
+.outcome-item.done .outcome-text { text-decoration: line-through; color: var(--text3); }
+.outcome-add { padding: 6px 16px 12px; border-top: 1px solid var(--border); }
+.outcome-inp { width: 100%; font-family: var(--font); font-size: 13px; color: var(--text); background: transparent; border: none; outline: none; }
+.outcome-inp::placeholder { color: var(--text3); font-style: italic; }
+
+/* ── TOMORROW BANNER ────────────────────────────────────────────── */
+.tmr-banner {
+  background: var(--peri-t); border: 1px solid var(--peri-b);
+  border-radius: var(--r); padding: 12px 16px;
+  display: flex; align-items: center; gap: 12px; display: none;
+}
+.tmr-banner-label { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--peri); flex-shrink: 0; }
+.tmr-banner-text  { flex: 1; font-size: 13px; font-weight: 500; color: var(--text); }
+
+/* ── MOVING NOW ──────────────────────────────────────────────────── */
+.moving-card { border-left: 3px solid var(--peri); }
+.focus-empty { padding: 28px 16px; text-align: center; }
+.focus-empty-main { font-size: 14px; color: var(--text3); font-style: italic; }
+.focus-empty-hint { font-size: 12px; color: var(--text3); opacity: 0.6; margin-top: 3px; }
+.focus-active { padding: 16px 16px 14px; display: flex; gap: 12px; align-items: flex-start; }
+.focus-dot {
+  width: 7px; height: 7px; background: var(--peri); border-radius: 50%;
+  flex-shrink: 0; margin-top: 9px; animation: fpulse 2.5s ease-in-out infinite;
+}
+@keyframes fpulse { 0%,100%{opacity:1;} 50%{opacity:.35;} }
+.focus-content { flex: 1; min-width: 0; }
+.focus-block-meta { display: flex; gap: 8px; font-size: 11px; color: var(--text3); margin-bottom: 5px; font-variant-numeric: tabular-nums; }
+.focus-block-sep { opacity: 0.4; }
+.focus-elapsed-ext { color: var(--pink); font-weight: 500; }
+.focus-text { font-size: 19px; font-weight: 500; color: var(--text); letter-spacing: -0.4px; line-height: 1.3; }
+.focus-actions { display: flex; gap: 7px; margin-top: 11px; }
+.btn-done {
+  font-family: var(--font); font-size: 12px; font-weight: 600;
+  padding: 5px 14px; border-radius: 20px;
+  background: var(--lime-t); color: var(--lime-s);
+  border: 1px solid rgba(184,187,26,.3); cursor: pointer; transition: all .13s;
+}
+.btn-done:hover { background: var(--lime); color: #3a3a00; border-color: var(--lime); }
+.btn-return {
+  font-family: var(--font); font-size: 12px; color: var(--text3);
+  background: none; border: 1px solid var(--border); border-radius: 20px;
+  padding: 5px 12px; cursor: pointer; transition: all .13s;
+}
+.btn-return:hover { border-color: var(--border2); color: var(--text2); }
+
+/* ── QUEUE ───────────────────────────────────────────────────────── */
+.queue-section { border-top: 1px solid var(--border); }
+.queue-section:first-child { border-top: none; }
+.qsec-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 16px 6px; cursor: pointer; user-select: none;
+}
+.qsec-label { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text3); }
+.qsec-label.today { color: var(--peri); }
+.qsec-count { font-size: 10px; color: var(--text3); }
+.qsec-arrow { font-size: 9px; color: var(--text3); transition: transform .18s; }
+.queue-section.collapsed .qsec-arrow { transform: rotate(-90deg); }
+.queue-section.collapsed .qsec-body { display: none; }
+.qsec-body { padding: 0 0 6px; }
+
+.qitem {
+  display: flex; align-items: center; gap: 8px;
+  padding: 5px 16px; transition: background .11s; cursor: default;
+}
+.qitem:hover { background: var(--surface2); }
+.qitem.done { opacity: 0.35; }
+.qitem.dragging { opacity: 0.2; }
+.qitem.droptarget { background: var(--peri-t); }
+
+.dhandle { color: var(--border2); cursor: grab; font-size: 11px; flex-shrink: 0; user-select: none; transition: color .11s; }
+.qitem:hover .dhandle { color: var(--text3); }
+.dhandle:active { cursor: grabbing; }
+
+.qcb {
+  -webkit-appearance: none; appearance: none;
+  width: 15px; height: 15px; flex-shrink: 0;
+  border: 1.5px solid var(--border2); border-radius: 4px;
+  cursor: pointer; position: relative; background: var(--surface); transition: all .13s;
+}
+.qcb:checked { background: var(--lime); border-color: var(--lime-s); }
+.qcb:checked::after {
+  content: ''; position: absolute; left: 3px; top: 0px;
+  width: 4px; height: 8px; border: 1.5px solid #fff; border-top: none; border-left: none;
+  transform: rotate(45deg);
+}
+.qtext { flex: 1; font-size: 13.5px; color: var(--text); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.qitem.done .qtext { text-decoration: line-through; color: var(--text3); }
+.qtime { font-size: 10px; color: var(--text3); opacity: 0.45; flex-shrink: 0; font-family: var(--mono); white-space: nowrap; }
+.qbtns { display: flex; gap: 1px; flex-shrink: 0; }
+.qbtn-focus {
+  background: none; border: none; color: var(--peri); cursor: pointer;
+  padding: 3px 6px; border-radius: 4px; font-size: 13px; line-height: 1;
+  opacity: 0.3; transition: opacity .12s, background .12s;
+}
+.qbtn-focus:hover { opacity: 1; background: var(--peri-t); }
+.qbtn-del { background: none; border: none; color: var(--text3); cursor: pointer; padding: 3px 5px; border-radius: 4px; font-size: 13px; line-height: 1; opacity: 0; transition: opacity .12s, color .12s; }
+.qitem:hover .qbtn-del { opacity: 1; }
+.qbtn-del:hover { color: #c04040; }
+
+.qadd { padding: 4px 16px 10px; border-top: 1px solid var(--border); }
+.qadd-inp { width: 100%; font-family: var(--font); font-size: 13px; color: var(--text); background: transparent; border: none; outline: none; }
+.qadd-inp::placeholder { color: var(--text3); }
+
+.qsec-drop { min-height: 30px; transition: background .11s; }
+.qsec-drop.drag-active { background: var(--peri-t); border-radius: 6px; }
+
+/* ── CHECKLIST (tickets + inventory) ────────────────────────────── */
+.cl-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 5px 16px; transition: background .11s;
+}
+.cl-item:hover { background: var(--surface2); }
+.cl-item.done { opacity: 0.35; }
+.cl-cb {
+  -webkit-appearance: none; appearance: none;
+  width: 15px; height: 15px; flex-shrink: 0;
+  border: 1.5px solid var(--border2); border-radius: 4px;
+  cursor: pointer; position: relative; background: var(--surface); transition: all .13s;
+}
+.cl-cb:checked { background: var(--lime); border-color: var(--lime-s); }
+.cl-cb:checked::after {
+  content: ''; position: absolute; left: 3px; top: 0px;
+  width: 4px; height: 8px; border: 1.5px solid #fff; border-top: none; border-left: none;
+  transform: rotate(45deg);
+}
+.cl-text { flex: 1; font-size: 13px; color: var(--text); }
+.cl-item.done .cl-text { text-decoration: line-through; color: var(--text3); }
+.cl-add { padding: 5px 16px 10px; border-top: 1px solid var(--border); }
+.cl-inp { width: 100%; font-family: var(--font); font-size: 13px; color: var(--text); background: transparent; border: none; outline: none; }
+.cl-inp::placeholder { color: var(--text3); }
+
+/* ── PARKING LOT ─────────────────────────────────────────────────── */
+.pl-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 5px 16px;
+}
+.pl-dot { width: 4px; height: 4px; background: var(--border2); border-radius: 50%; flex-shrink: 0; }
+.pl-text { flex: 1; font-size: 13px; color: var(--text2); }
+.pl-del { background: none; border: none; color: var(--border2); cursor: pointer; padding: 2px 4px; font-size: 12px; line-height: 1; opacity: 0; transition: opacity .12s, color .12s; }
+.pl-item:hover .pl-del { opacity: 1; }
+.pl-del:hover { color: #c04040; }
+.pl-add { padding: 5px 16px 10px; border-top: 1px solid var(--border); }
+.pl-inp { width: 100%; font-family: var(--font); font-size: 13px; color: var(--text); background: transparent; border: none; outline: none; }
+.pl-inp::placeholder { color: var(--text3); font-style: italic; }
+
+/* ── WAITING ─────────────────────────────────────────────────────── */
+.wait-row { display: flex; align-items: center; gap: 0; border-bottom: 1px solid var(--border); transition: background .11s; }
+.wait-row:last-child { border-bottom: none; }
+.wait-row:hover { background: var(--surface2); }
+.wait-row.lav { background: var(--lav-t); }
+.wait-row.lav:hover { background: rgba(220,199,239,0.34); }
+.wait-row.pink { background: var(--pink-t); }
+.wait-row.pink:hover { background: rgba(240,166,247,0.30); }
+.w-inp { font-family: var(--font); font-size: 13px; color: var(--text); background: transparent; border: none; outline: none; padding: 7px 10px; }
+.w-inp::placeholder { color: var(--text3); }
+.wait-days { font-size: 11px; color: var(--text3); white-space: nowrap; padding: 0 8px; font-variant-numeric: tabular-nums; flex-shrink: 0; }
+.wait-days.warn { color: var(--magenta); font-weight: 500; }
+.wait-days.alert { color: #b44; font-weight: 600; }
+.wait-summary { display: flex; gap: 14px; padding: 0 16px 4px; }
+.wait-sum-item { font-size: 11px; color: var(--text3); }
+.wait-sum-item strong { color: var(--text2); }
+
+/* ── BLOCKED ─────────────────────────────────────────────────────── */
+.blocked-card { border: 1px solid rgba(200,80,80,0.20); border-left: 3px solid #e07070; border-radius: var(--r); background: var(--surface); display: none; }
+.blabel { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #c05050; }
+.bitem { display: flex; align-items: center; gap: 8px; padding: 5px 16px; border-bottom: 1px solid var(--border); }
+.bitem:last-of-type { border-bottom: none; }
+.bdot { width: 5px; height: 5px; background: #e07070; border-radius: 50%; flex-shrink: 0; }
+.btext { flex: 1; font-size: 13px; color: var(--text); }
+.badd-zone { padding: 4px 16px 9px; border-top: 1px solid var(--border); display: none; }
+.badd-inp { width: 100%; font-family: var(--font); font-size: 13px; color: var(--text); background: transparent; border: none; outline: none; }
+.badd-inp::placeholder { color: var(--text3); }
+
+/* ── DONE TODAY ──────────────────────────────────────────────────── */
+.done-summary { display: flex; gap: 14px; padding: 8px 16px 0; }
+.done-sum-item { font-size: 12px; color: var(--text3); }
+.done-sum-item strong { color: var(--lime-s); font-weight: 700; }
+.done-item { display: flex; align-items: center; gap: 9px; padding: 5px 16px; border-bottom: 1px solid var(--border); }
+.done-item:last-child { border-bottom: none; }
+.done-check { color: var(--lime-s); font-size: 11px; flex-shrink: 0; }
+.done-text { font-size: 13px; color: var(--text2); flex: 1; }
+.done-time { font-size: 11px; color: var(--text3); font-family: var(--mono); }
+
+/* ── TOMORROW FIRST ──────────────────────────────────────────────── */
+.tmr-card { background: var(--peri-t); border: 1px solid var(--peri-b); border-radius: var(--r); padding: 12px 16px; }
+.tmr-card-label { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--peri); margin-bottom: 8px; }
+.tmr-inp { width: 100%; font-family: var(--font); font-size: 14px; color: var(--text); background: transparent; border: none; outline: none; font-weight: 500; }
+.tmr-inp::placeholder { color: var(--text3); font-weight: 400; }
+
+/* ── FOLLOW UPS TODAY ────────────────────────────────────────────── */
+.followup-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px 0; }
+.followup-progress { font-size: 12px; font-weight: 600; color: var(--peri); }
+
+/* ── COLLAPSIBLES ────────────────────────────────────────────────── */
+.coll { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; }
+.ctrig { width: 100%; background: none; border: none; cursor: pointer; padding: 10px 16px; display: flex; align-items: center; gap: 9px; font-family: var(--font); text-align: left; transition: background .11s; }
+.ctrig:hover { background: var(--surface2); }
+.ctrig:hover .ctitle { color: var(--peri); }
+.carrow { font-size: 9px; color: var(--text3); transition: transform .18s; flex-shrink: 0; }
+.coll.open .carrow { transform: rotate(90deg); }
+.ctitle { font-size: 13px; font-weight: 500; color: var(--text); }
+.cbadge { font-size: 10px; font-weight: 600; margin-left: auto; background: var(--surface2); color: var(--text3); border: 1px solid var(--border); padding: 1px 7px; border-radius: 10px; }
+.cbadge.hot { background: var(--peri-t); color: var(--peri); border-color: var(--peri-b); }
+.cbadge.done-hot { background: var(--lime-t); color: var(--lime-s); border-color: rgba(184,187,26,.3); }
+.cbody { max-height: 0; overflow: hidden; transition: max-height .26s cubic-bezier(.4,0,.2,1); border-top: 0 solid var(--border); }
+.coll.open .cbody { max-height: 600px; border-top-width: 1px; }
+.itfoot { padding: 6px 16px 10px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+
+.empty { padding: 10px 16px; text-align: center; color: var(--text3); font-size: 13px; font-style: italic; }
+
+/* ── MODAL ───────────────────────────────────────────────────────── */
+.mback { display: none; position: fixed; inset: 0; background: rgba(43,43,43,0.28); z-index: 300; align-items: center; justify-content: center; backdrop-filter: blur(2px); }
+.mback.open { display: flex; }
+.modal { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 24px; width: min(440px, calc(100vw - 28px)); box-shadow: 0 8px 36px rgba(0,0,0,0.12); }
+.mtitle { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 4px; letter-spacing: -0.3px; }
+.msub   { font-size: 13px; color: var(--text2); margin-bottom: 16px; line-height: 1.5; }
+.mopt { border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; margin-bottom: 8px; cursor: pointer; transition: border-color .13s, background .13s; }
+.mopt:hover, .mopt.sel { border-color: var(--peri); background: var(--peri-t); }
+.mopt-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 3px; display: flex; align-items: center; gap: 7px; }
+.mpill { font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; background: var(--peri); color: #fff; padding: 2px 6px; border-radius: 7px; }
+.mopt-body { font-size: 12px; color: var(--text2); line-height: 1.5; }
+.mfoot { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); }
+
+/* ── ELAPSED ─────────────────────────────────────────────────────── */
+.itable { width: 100%; border-collapse: collapse; }
+.itable th { font-size: 10px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text3); padding: 6px 10px; text-align: left; border-bottom: 1px solid var(--border); }
+.itable td { padding: 0; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.itable tr:last-child td { border-bottom: none; }
+.itable tr.row-done { opacity: 0.35; }
+.itable tr.row-done .itd-inp { text-decoration: line-through; color: var(--text3); }
+td.cb-cell { width: 32px; text-align: center; padding: 0 6px; }
+
+@media (max-width: 640px) {
+  .main { padding: 12px 12px 50px; gap: 8px; }
+  .header { padding: 0 14px; }
+  .hsaved, .hdate { display: none; }
+  .focus-text { font-size: 16px; }
+}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="hbrand">
+    <div class="hmark">CT</div>
+    <span class="hname">Control Tower</span>
+    <div class="hsep"></div>
+    <span class="hdate" id="hdate"></span>
+  </div>
+  <div class="hactions">
+    <span class="hsaved" id="hsaved"></span>
+    <button class="btn btn-ghost btn-sm" onclick="manualSave()">Save</button>
+    <button class="btn btn-peri btn-sm" onclick="openNewDay()">New Day</button>
+  </div>
+</header>
+
+<!-- MODAL -->
+<div class="mback" id="ndModal" onclick="if(event.target===this)closeNewDay()">
+  <div class="modal">
+    <div class="mtitle">Start New Day</div>
+    <div class="msub">Today will be archived. How would you like to begin?</div>
+    <div class="mopt sel" id="nd-carry" onclick="selNd('carry')">
+      <div class="mopt-title">Carry Forward <span class="mpill">Recommended</span></div>
+      <div class="mopt-body">Archive today. Carry unfinished Today queue, Waiting, Blocked, and Tomorrow First.</div>
+    </div>
+    <div class="mopt" id="nd-fresh" onclick="selNd('fresh')">
+      <div class="mopt-title">Fresh Start</div>
+      <div class="mopt-body">Archive today. Begin completely empty.</div>
+    </div>
+    <div class="mfoot">
+      <button class="btn btn-ghost" onclick="closeNewDay()">Cancel</button>
+      <button class="btn btn-peri" onclick="confirmNewDay()">Start New Day</button>
+    </div>
+  </div>
+</div>
+
+<main class="main">
+
+<!-- PROGRESS CARD -->
+<div class="prog-card" id="prog-card">
+  <div class="prog-bar-wrap">
+    <div class="prog-label">
+      <span>Today's Progress</span>
+      <strong id="prog-label-right">0 done · 0 remaining</strong>
+    </div>
+    <div class="prog-bar-track"><div class="prog-bar-fill" id="prog-fill" style="width:0%"></div></div>
+  </div>
+  <div class="prog-pct" id="prog-pct">0%</div>
+</div>
+
+<!-- TOMORROW BANNER -->
+<div class="tmr-banner" id="tmr-banner">
+  <span class="tmr-banner-label">Start Here</span>
+  <span class="tmr-banner-text" id="tmr-banner-text"></span>
+  <button class="icon-btn" onclick="dismissTmrBanner()">×</button>
+</div>
+
+<!-- TODAY'S OUTCOMES -->
+<div class="outcomes-card">
+  <div class="outcomes-header">
+    <span class="slabel">Today's Outcomes</span>
+    <span class="outcomes-progress" id="outcomes-progress"></span>
+  </div>
+  <div class="outcome-list" id="outcome-list"></div>
+  <div class="outcome-add" id="outcome-add">
+    <input class="outcome-inp" id="outcome-inp" placeholder="Define what makes today successful — max 2, press Enter…" onkeydown="outcomeKey(event)">
+  </div>
+</div>
+
+<!-- MOVING NOW -->
+<div class="card moving-card" id="moving-now">
+  <div class="card-head"><span class="slabel">Moving Now</span></div>
+  <div id="focus-slot"></div>
+</div>
+
+<!-- QUEUE -->
+<div class="card" id="queue-card">
+  <div class="card-head" style="padding-bottom:6px;">
+    <span class="slabel">Queue</span>
+  </div>
+  <!-- TODAY -->
+  <div class="queue-section" id="qs-today">
+    <div class="qsec-head" onclick="togQSec('qs-today')">
+      <span class="qsec-label today">Today</span>
+      <span class="qsec-count" id="qc-today"></span>
+    </div>
+    <div class="qsec-body">
+      <div class="qsec-drop" id="qd-today"
+           ondragover="secDragOver(event,'today')" ondragleave="secDragLeave(event,'today')" ondrop="secDrop(event,'today')">
+        <div id="ql-today"></div>
+      </div>
+      <div class="qadd" style="padding-top:4px;">
+        <input class="qadd-inp" placeholder="Add for today — Enter…" onkeydown="qAddKey(event,'today')">
+      </div>
+    </div>
+  </div>
+  <!-- THIS WEEK -->
+  <div class="queue-section collapsed" id="qs-week">
+    <div class="qsec-head" onclick="togQSec('qs-week')">
+      <span class="qsec-label">This Week</span>
+      <span style="display:flex;align-items:center;gap:6px;">
+        <span class="qsec-count" id="qc-week"></span>
+        <span class="qsec-arrow">▶</span>
+      </span>
+    </div>
+    <div class="qsec-body">
+      <div class="qsec-drop" id="qd-week"
+           ondragover="secDragOver(event,'week')" ondragleave="secDragLeave(event,'week')" ondrop="secDrop(event,'week')">
+        <div id="ql-week"></div>
+      </div>
+      <div class="qadd">
+        <input class="qadd-inp" placeholder="Add for this week — Enter…" onkeydown="qAddKey(event,'week')">
+      </div>
+    </div>
+  </div>
+  <!-- LATER -->
+  <div class="queue-section collapsed" id="qs-later">
+    <div class="qsec-head" onclick="togQSec('qs-later')">
+      <span class="qsec-label">Later</span>
+      <span style="display:flex;align-items:center;gap:6px;">
+        <span class="qsec-count" id="qc-later"></span>
+        <span class="qsec-arrow">▶</span>
+      </span>
+    </div>
+    <div class="qsec-body">
+      <div class="qsec-drop" id="qd-later"
+           ondragover="secDragOver(event,'later')" ondragleave="secDragLeave(event,'later')" ondrop="secDrop(event,'later')">
+        <div id="ql-later"></div>
+      </div>
+      <div class="qadd">
+        <input class="qadd-inp" placeholder="Parking for later — Enter…" onkeydown="qAddKey(event,'later')">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TICKET ACTIONS -->
+<div class="coll" id="sec-tkt">
+  <button class="ctrig" onclick="togColl('sec-tkt')">
+    <span class="carrow">▶</span>
+    <span class="ctitle">Ticket Actions</span>
+    <span class="cbadge" id="badge-tkt">0</span>
+  </button>
+  <div class="cbody">
+    <div id="tkt-list"></div>
+    <div class="cl-add">
+      <input class="cl-inp" placeholder="Add ticket action — Enter…" onkeydown="clAddKey(event,'tkt')">
+    </div>
+  </div>
+</div>
+
+<!-- INVENTORY ACTIONS -->
+<div class="coll" id="sec-inv">
+  <button class="ctrig" onclick="togColl('sec-inv')">
+    <span class="carrow">▶</span>
+    <span class="ctitle">Inventory Actions</span>
+    <span class="cbadge" id="badge-inv">0</span>
+  </button>
+  <div class="cbody">
+    <div id="inv-list"></div>
+    <div class="cl-add">
+      <input class="cl-inp" placeholder="Add inventory action — Enter…" onkeydown="clAddKey(event,'inv')">
+    </div>
+  </div>
+</div>
+
+<!-- PARKING LOT -->
+<div class="coll" id="sec-pl">
+  <button class="ctrig" onclick="togColl('sec-pl')">
+    <span class="carrow">▶</span>
+    <span class="ctitle">Parking Lot</span>
+    <span class="cbadge" id="badge-pl">0</span>
+  </button>
+  <div class="cbody">
+    <div id="pl-list"></div>
+    <div class="pl-add">
+      <input class="pl-inp" id="pl-inp" placeholder="Capture anything — notes, ideas, requests…" onkeydown="plAddKey(event)">
+    </div>
+  </div>
+</div>
+
+<!-- WAITING -->
+<div class="coll" id="sec-wait">
+  <button class="ctrig" onclick="togColl('sec-wait')">
+    <span class="carrow">▶</span>
+    <span class="ctitle">Waiting</span>
+    <span class="cbadge" id="badge-wait">0</span>
+  </button>
+  <div class="cbody">
+    <div class="wait-summary" id="wait-summary"></div>
+    <table class="itable" id="wait-tbl" style="display:none;">
+      <thead><tr>
+        <th>Waiting On</th>
+        <th style="width:130px;">Next Follow Up</th>
+        <th style="width:60px;">Days</th>
+        <th style="width:30px;"></th>
+      </tr></thead>
+      <tbody id="wait-body"></tbody>
+    </table>
+    <div id="wait-empty" class="empty">Nothing waiting.</div>
+    <div class="itfoot">
+      <button class="btn btn-ghost btn-sm" onclick="addWait()">+ Add</button>
+    </div>
+  </div>
+</div>
+
+<!-- FOLLOW UPS TODAY -->
+<div class="outcomes-card" id="followup-card">
+  <div class="followup-header">
+    <span class="slabel">Follow Ups Today</span>
+    <span class="followup-progress" id="followup-progress"></span>
+  </div>
+  <div class="outcome-list" id="followup-list"></div>
+  <div class="outcome-add" id="followup-add">
+    <input class="outcome-inp" id="followup-inp" placeholder="Add a follow up — press Enter…" onkeydown="followupKey(event)">
+  </div>
+</div>
+
+<!-- BLOCKED -->
+<div class="blocked-card" id="bcard">
+  <div class="card-head" style="padding-bottom:6px;">
+    <span class="blabel">Blocked</span>
+    <button class="btn btn-ghost btn-sm" id="badd-btn" onclick="showBlockedInput()">+ Add</button>
+  </div>
+  <div id="bitems"></div>
+  <div class="badd-zone" id="badd-zone">
+    <input class="badd-inp" id="badd-inp" placeholder="What is blocked — Enter…" onkeydown="blockedKey(event)" onblur="blockedBlur()">
+  </div>
+</div>
+
+<!-- DONE TODAY -->
+<div class="coll" id="sec-done">
+  <button class="ctrig" onclick="togColl('sec-done')">
+    <span class="carrow">▶</span>
+    <span class="ctitle">Done Today</span>
+    <span class="cbadge done-hot" id="badge-done">0</span>
+  </button>
+  <div class="cbody">
+    <div class="done-summary" id="done-summary"></div>
+    <div id="done-body"></div>
+    <div class="itfoot"><button class="btn-link" onclick="clearDone()">Clear history</button></div>
+  </div>
+</div>
+
+<!-- TOMORROW FIRST -->
+<div class="tmr-card">
+  <div class="tmr-card-label">Tomorrow First</div>
+  <input class="tmr-inp" id="tmr-inp" placeholder="What's the first thing tomorrow morning?" oninput="S.tomorrowFirst=this.value;save()">
+</div>
+
+
+</main>
+
+<script>
+// ── DATE / UTILS ───────────────────────────────────────────────────────────
+const todayKey = () => new Date().toISOString().split('T')[0];
+const fmtDate  = () => new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+const fmtTime  = () => new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+const uid      = () => Date.now().toString(36) + Math.random().toString(36).slice(2,5);
+const esc      = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+document.getElementById('hdate').textContent = fmtDate();
+
+// ── STATE ─────────────────────────────────────────────────────────────────
+const def = () => ({
+  outcomes:      [],   // [{id,text,done}] max 2
+  movingNow:     null, // {id,text,startedAt,startedTs,blockNum}
+  blockNum:      1,
+  queueToday:    [],   // [{id,text,done,updated}]
+  queueWeek:     [],
+  queueLater:    [],
+  tktActions:    [],   // [{id,text,done}]
+  invActions:    [],   // [{id,text,done}]
+  parkingLot:    [],   // [{id,text}]
+  waiting:       [],   // [{id,what,nextFollowUp,addedDate}]
+  followUps:     [],   // [{id,text,done}] max 3
+  blocked:       [],   // [{id,text}] max 3
+  doneToday:     [],   // [{id,text,time}]
+  tomorrowFirst: '',
+  lastSaved:     null
+});
+let S = def();
+
+// ── PERSIST ───────────────────────────────────────────────────────────────
+function save() {
+  S.lastSaved = new Date().toISOString();
+  localStorage.setItem('rct_' + todayKey(), JSON.stringify(S));
+  updSaved();
+}
+function load() {
+  const raw = localStorage.getItem('rct_' + todayKey());
+  if (raw) { try { S = { ...def(), ...JSON.parse(raw) }; } catch(e) { S = def(); } }
+}
+function manualSave() {
+  save();
+  const b = document.getElementById('hsaved');
+  const prev = b.textContent;
+  b.textContent = 'Saved ✓';
+  setTimeout(() => updSaved(), 1400);
+}
+function updSaved() {
+  const el = document.getElementById('hsaved');
+  if (!el || !S.lastSaved) return;
+  el.textContent = 'Saved ' + new Date(S.lastSaved).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+}
+setInterval(save, 90000);
+
+// ── RENDER ALL ────────────────────────────────────────────────────────────
+function renderAll() {
+  renderProgress(); renderOutcomes();
+  renderFocus();
+  renderQueue('today'); renderQueue('week'); renderQueue('later');
+  renderCL('tkt'); renderCL('inv');
+  renderPL(); renderWaiting(); renderFollowUps(); renderBlocked(); renderDone();
+  const ti = document.getElementById('tmr-inp');
+  if (ti && ti !== document.activeElement) ti.value = S.tomorrowFirst || '';
+  updSaved();
+}
+
+// ── PROGRESS ──────────────────────────────────────────────────────────────
+function renderProgress() {
+  const outcomes = S.outcomes || [];
+  const done     = outcomes.filter(x=>x.done).length;
+  const total    = 2;
+  const pct      = Math.round(done / total * 100);
+
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('prog-pct').textContent  = pct + '%';
+  document.getElementById('prog-label-right').textContent = done + ' of ' + total + ' Outcomes Complete';
+}
+
+// ── TOMORROW BANNER ───────────────────────────────────────────────────────
+function showTmrBanner(text) {
+  const b = document.getElementById('tmr-banner');
+  const t = document.getElementById('tmr-banner-text');
+  if (b && t && text) { t.textContent = text; b.style.display = 'flex'; }
+}
+function dismissTmrBanner() {
+  document.getElementById('tmr-banner').style.display = 'none';
+}
+
+// ── OUTCOMES ──────────────────────────────────────────────────────────────
+function renderOutcomes() {
+  const list = document.getElementById('outcome-list');
+  const prog = document.getElementById('outcomes-progress');
+  const addEl= document.getElementById('outcome-add');
+  const outcomes = S.outcomes || [];
+  const done  = outcomes.filter(o=>o.done).length;
+  prog.textContent = outcomes.length ? done + ' / 2 Complete' : '0 / 2 Complete';
+  addEl.style.display = outcomes.length >= 2 ? 'none' : 'block';
+
+  if (!outcomes.length) { list.innerHTML = ''; return; }
+  list.innerHTML = outcomes.map(o => `
+    <div class="outcome-item${o.done?' done':''}">
+      <input type="checkbox" class="outcome-cb" ${o.done?'checked':''} onchange="outcomeCheck('${o.id}',this.checked)">
+      <span class="outcome-text">${esc(o.text)}</span>
+      <button class="icon-btn del" onclick="outcomeDel('${o.id}')">×</button>
+    </div>`).join('');
+}
+function outcomeKey(e) {
+  if (e.key !== 'Enter') return;
+  const v = e.target.value.trim();
+  if (!v || S.outcomes.length >= 2) return;
+  S.outcomes.push({ id: uid(), text: v, done: false });
+  e.target.value = ''; save(); renderOutcomes(); renderProgress();
+}
+function outcomeCheck(id, checked) {
+  const o = S.outcomes.find(x=>x.id===id);
+  if (!o) return;
+  o.done = checked;
+  if (checked) { S.doneToday.unshift({ id: uid(), text: '★ ' + o.text, time: fmtTime() }); }
+  else { S.doneToday = S.doneToday.filter(d => d.text !== '★ ' + o.text); }
+  save(); renderOutcomes(); renderProgress(); renderDone();
+}
+function outcomeDel(id) { S.outcomes = S.outcomes.filter(x=>x.id!==id); save(); renderOutcomes(); }
+
+// ── MOVING NOW ────────────────────────────────────────────────────────────
+function renderFocus() {
+  const slot = document.getElementById('focus-slot');
+  if (!S.movingNow) {
+    stopElapsed();
+    slot.innerHTML = `<div class="focus-empty">
+      <div class="focus-empty-main">Nothing in focus right now.</div>
+      <div class="focus-empty-hint">Move a queue item here with →</div>
+    </div>`; return;
+  }
+  const { text, startedAt, startedTs, blockNum } = S.movingNow;
+  const bn = blockNum || 1;
+  const elapsedStr = startedTs ? fmtElapsed(startedTs) : '—';
+  const extended   = startedTs && ((Date.now()-startedTs)/60000) > (bn===1?90:60);
+  slot.innerHTML = `<div class="focus-active">
+    <div class="focus-dot"></div>
+    <div class="focus-content">
+      <div class="focus-block-meta">
+        <span>Block ${bn}</span>
+        <span class="focus-block-sep">·</span>
+        <span>Started ${startedAt||'—'}</span>
+        <span class="focus-block-sep">·</span>
+        <span id="focus-elapsed"${extended?' class="focus-elapsed-ext"':''}>Elapsed ${elapsedStr}${extended?' · Extended':''}</span>
+      </div>
+      <div class="focus-text">${esc(text)}</div>
+      <div class="focus-actions">
+        <button class="btn-done" onclick="focusDone()">Mark done</button>
+        <button class="btn-return" onclick="focusReturn()">Return to queue</button>
+      </div>
+    </div>
+  </div>`;
+  startElapsed();
+}
+
+function focusDone() {
+  if (!S.movingNow) return;
+  S.doneToday.unshift({ id: uid(), text: S.movingNow.text, time: fmtTime() });
+  S.blockNum = (S.blockNum||1) + 1;
+  S.movingNow = null;
+  save(); renderAll();
+}
+function focusReturn() {
+  if (!S.movingNow) return;
+  S.queueToday.unshift({ id: S.movingNow.id, text: S.movingNow.text, done: false, updated: fmtTime() });
+  S.movingNow = null;
+  save(); renderAll();
+}
+function moveToFocus(section, id) {
+  const key = sectionKey(section);
+  const item = S[key].find(q=>q.id===id);
+  if (!item) return;
+  if (S.movingNow) S.queueToday.unshift({ id: S.movingNow.id, text: S.movingNow.text, done: false, updated: fmtTime() });
+  S.movingNow = { id: item.id, text: item.text, startedAt: fmtTime(), startedTs: Date.now(), blockNum: S.blockNum||1 };
+  S[key] = S[key].filter(q=>q.id!==id);
+  save(); renderAll();
+}
+
+// ── ELAPSED TIMER ─────────────────────────────────────────────────────────
+function fmtElapsed(startedTs) {
+  const mins = Math.floor((Date.now()-startedTs)/60000);
+  const h = Math.floor(mins/60), m = mins%60;
+  return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
+}
+let _elTimer = null;
+function startElapsed() { if (_elTimer) return; _elTimer = setInterval(updateElapsed,30000); }
+function stopElapsed()  { if (_elTimer) { clearInterval(_elTimer); _elTimer=null; } }
+function updateElapsed() {
+  const el = document.getElementById('focus-elapsed');
+  if (!el || !S.movingNow?.startedTs) { stopElapsed(); return; }
+  const mins = Math.floor((Date.now()-S.movingNow.startedTs)/60000);
+  const h = Math.floor(mins/60), m = mins%60;
+  const elapsed = String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
+  const bn = S.movingNow.blockNum||1;
+  const extended = mins>(bn===1?90:60);
+  el.textContent = 'Elapsed '+elapsed+(extended?' · Extended':'');
+  el.className   = extended?'focus-elapsed-ext':'';
+}
+
+// ── QUEUE ─────────────────────────────────────────────────────────────────
+const sectionKey = s => s==='today'?'queueToday':s==='week'?'queueWeek':'queueLater';
+const sectionName = s => s==='today'?'Today':s==='week'?'Week':'Later';
+
+function renderQueue(section) {
+  const key   = sectionKey(section);
+  const items = S[key]||[];
+  const list  = document.getElementById('ql-'+section);
+  const cnt   = document.getElementById('qc-'+section);
+  const active= items.filter(q=>!q.done).length;
+  if (cnt) cnt.textContent = active ? active+' item'+(active!==1?'s':'') : '';
+
+  if (!items.length) { list.innerHTML = '<div class="empty" style="padding:8px 16px;">Empty.</div>'; return; }
+  list.innerHTML = items.map(q=>`
+    <div class="qitem${q.done?' done':''}" id="qi-${q.id}"
+         draggable="true"
+         ondragstart="qDS(event,'${section}','${q.id}')"
+         ondragend="qDE(event)"
+         ondragover="qIDO(event,'${q.id}')"
+         ondragleave="qIDL(event,'${q.id}')"
+         ondrop="qIDP(event,'${section}','${q.id}')">
+      <span class="dhandle">⠿</span>
+      <input type="checkbox" class="qcb" ${q.done?'checked':''} onchange="qCheck('${section}','${q.id}',this.checked)">
+      <span class="qtext" title="${esc(q.text)}">${esc(q.text)}</span>
+      ${q.updated?`<span class="qtime">${q.updated}</span>`:''}
+      <span class="qbtns">
+        <button class="qbtn-focus" onclick="moveToFocus('${section}','${q.id}')" title="Move to focus">→</button>
+        <button class="qbtn-del" onclick="qDel('${section}','${q.id}')" title="Remove">×</button>
+      </span>
+    </div>`).join('');
+}
+
+function qCheck(section, id, checked) {
+  const key  = sectionKey(section);
+  const item = S[key].find(q=>q.id===id);
+  if (!item) return;
+  item.done = checked;
+  if (checked) {
+    setTimeout(()=>{
+      S[key] = S[key].filter(q=>q.id!==id);
+      S.doneToday.unshift({ id:uid(), text:item.text, time:fmtTime() });
+      save(); renderAll();
+    }, 380);
+  } else { save(); renderQueue(section); }
+}
+function qDel(section, id) { const k=sectionKey(section); S[k]=S[k].filter(q=>q.id!==id); save(); renderQueue(section); }
+function qAddKey(e, section) {
+  if (e.key!=='Enter') return;
+  const v = e.target.value.trim();
+  if (!v) return;
+  const k = sectionKey(section);
+  S[k].push({ id:uid(), text:v, done:false, updated:fmtTime() });
+  e.target.value=''; save(); renderQueue(section); renderProgress();
+}
+function togQSec(id) { document.getElementById(id).classList.toggle('collapsed'); }
+
+// ── QUEUE DRAG (within section reorder) ───────────────────────────────────
+let _did=null, _dsec=null;
+function qDS(e,sec,id){ _did=id;_dsec=sec;e.dataTransfer.effectAllowed='move';setTimeout(()=>{const el=document.getElementById('qi-'+id);if(el)el.classList.add('dragging');},0); }
+function qDE(e){ if(_did){const el=document.getElementById('qi-'+_did);if(el)el.classList.remove('dragging');}document.querySelectorAll('.qitem').forEach(el=>el.classList.remove('droptarget')); }
+function qIDO(e,tid){ e.preventDefault();if(!_did||_did===tid)return;document.querySelectorAll('.qitem').forEach(el=>el.classList.remove('droptarget'));const el=document.getElementById('qi-'+tid);if(el)el.classList.add('droptarget'); }
+function qIDL(e,tid){ const el=document.getElementById('qi-'+tid);if(el)el.classList.remove('droptarget'); }
+function qIDP(e,tsec,tid){
+  e.preventDefault(); e.stopPropagation();
+  document.querySelectorAll('.qitem').forEach(el=>el.classList.remove('droptarget'));
+  if(!_did)return;
+  if(_dsec===tsec && _did!==tid){
+    const k=sectionKey(tsec);
+    const fi=S[k].findIndex(q=>q.id===_did),ti=S[k].findIndex(q=>q.id===tid);
+    if(fi!==-1&&ti!==-1){const[item]=S[k].splice(fi,1);S[k].splice(ti,0,item);}
+  } else if(_dsec!==tsec){
+    const sk=sectionKey(_dsec),dk=sectionKey(tsec);
+    const item=S[sk].find(q=>q.id===_did);
+    if(item){S[sk]=S[sk].filter(q=>q.id!==_did);S[dk].push({...item});}
+  }
+  _did=null;_dsec=null; save(); renderQueue('today');renderQueue('week');renderQueue('later'); renderProgress();
+}
+
+// ── SECTION DROP ZONE (drag between sections) ─────────────────────────────
+function secDragOver(e,sec){ e.preventDefault();const el=document.getElementById('qd-'+sec);if(el)el.classList.add('drag-active'); }
+function secDragLeave(e,sec){ const el=document.getElementById('qd-'+sec);if(el)el.classList.remove('drag-active'); }
+function secDrop(e,sec){
+  e.preventDefault();
+  const el=document.getElementById('qd-'+sec);if(el)el.classList.remove('drag-active');
+  if(!_did||_dsec===sec)return;
+  const sk=sectionKey(_dsec),dk=sectionKey(sec);
+  const item=S[sk].find(q=>q.id===_did);
+  if(item){S[sk]=S[sk].filter(q=>q.id!==_did);S[dk].push({...item});}
+  _did=null;_dsec=null; save(); renderQueue('today');renderQueue('week');renderQueue('later'); renderProgress();
+}
+
+// ── CHECKLIST (TICKET + INVENTORY ACTIONS) ────────────────────────────────
+function renderCL(type) {
+  const key   = type==='tkt'?'tktActions':'invActions';
+  const listEl= document.getElementById(type+'-list');
+  const badge = document.getElementById('badge-'+type);
+  const items = S[key]||[];
+  const active= items.filter(i=>!i.done).length;
+  badge.textContent = items.length;
+  badge.className   = 'cbadge'+(active?' hot':'');
+
+  if (!items.length) { listEl.innerHTML='<div class="empty">No actions.</div>'; return; }
+  listEl.innerHTML = items.map(i=>`
+    <div class="cl-item${i.done?' done':''}">
+      <input type="checkbox" class="cl-cb" ${i.done?'checked':''} onchange="clCheck('${type}','${i.id}',this.checked)">
+      <span class="cl-text">${esc(i.text)}</span>
+      <button class="icon-btn del" onclick="clDel('${type}','${i.id}')">×</button>
+    </div>`).join('');
+}
+function clCheck(type, id, checked) {
+  const key  = type==='tkt'?'tktActions':'invActions';
+  const item = S[key].find(x=>x.id===id);
+  if (!item) return;
+  item.done = checked;
+  if (checked) setTimeout(()=>{
+    S[key]=S[key].filter(x=>x.id!==id);
+    S.doneToday.unshift({id:uid(),text:item.text,time:fmtTime()});
+    save(); renderAll();
+  },500);
+  else { save(); renderCL(type); }
+}
+function clDel(type, id) { const k=type==='tkt'?'tktActions':'invActions';S[k]=S[k].filter(x=>x.id!==id);save();renderCL(type); }
+function clAddKey(e, type) {
+  if (e.key!=='Enter') return;
+  const v=e.target.value.trim(); if(!v)return;
+  const k=type==='tkt'?'tktActions':'invActions';
+  S[k].push({id:uid(),text:v,done:false});
+  e.target.value=''; save(); renderCL(type); renderProgress();
+  if(!document.getElementById('sec-'+type).classList.contains('open'))togColl('sec-'+type);
+}
+
+// ── PARKING LOT ────────────────────────────────────────────────────────────
+function renderPL() {
+  const list  = document.getElementById('pl-list');
+  const badge = document.getElementById('badge-pl');
+  badge.textContent = (S.parkingLot||[]).length;
+  badge.className   = 'cbadge'+(S.parkingLot.length?' hot':'');
+  if (!S.parkingLot.length) { list.innerHTML='<div class="empty">Nothing parked.</div>'; return; }
+  list.innerHTML = S.parkingLot.map(p=>`
+    <div class="pl-item">
+      <span class="pl-dot"></span>
+      <span class="pl-text">${esc(p.text)}</span>
+      <button class="pl-del" onclick="plDel('${p.id}')">×</button>
+    </div>`).join('');
+}
+function plAddKey(e) {
+  if (e.key!=='Enter') return;
+  const v=e.target.value.trim(); if(!v)return;
+  S.parkingLot.push({id:uid(),text:v});
+  e.target.value=''; save(); renderPL();
+  if(!document.getElementById('sec-pl').classList.contains('open'))togColl('sec-pl');
+}
+function plDel(id){S.parkingLot=S.parkingLot.filter(x=>x.id!==id);save();renderPL();}
+
+// ── WAITING ────────────────────────────────────────────────────────────────
+function daysWaiting(addedDate) {
+  if (!addedDate) return 0;
+  return Math.max(0, Math.floor((Date.now()-new Date(addedDate).getTime())/86400000));
+}
+function waitRowClass(days) { return days>=5?'pink':days>=3?'lav':''; }
+
+function renderWaiting() {
+  const body   = document.getElementById('wait-body');
+  const tbl    = document.getElementById('wait-tbl');
+  const empty  = document.getElementById('wait-empty');
+  const badge  = document.getElementById('badge-wait');
+  const sumEl  = document.getElementById('wait-summary');
+  const items  = S.waiting||[];
+
+  badge.textContent = items.length;
+  badge.className   = 'cbadge'+(items.length?' hot':'');
+
+  const needsFollowUp = items.filter(w=>{ const d=daysWaiting(w.addedDate); return d>=3; }).length;
+  sumEl.innerHTML = items.length ? `
+    <span class="wait-sum-item"><strong>${items.length}</strong> waiting</span>
+    ${needsFollowUp?`<span class="wait-sum-item" style="color:var(--magenta)"><strong>${needsFollowUp}</strong> need follow-up</span>`:''}
+  ` : '';
+
+  if (!items.length) { tbl.style.display='none'; empty.style.display='block'; return; }
+  tbl.style.display='table'; empty.style.display='none';
+
+  body.innerHTML = items.map(w=>{
+    const days = daysWaiting(w.addedDate);
+    const cls  = waitRowClass(days);
+    const dcls = days>=5?'alert':days>=3?'warn':'';
+    return `<tr class="wait-row${cls?' '+cls:''}">
+      <td><input class="w-inp" value="${esc(w.what)}" placeholder="Waiting on…" oninput="updW('${w.id}','what',this.value)" style="flex:1;width:100%;"></td>
+      <td><input class="w-inp" value="${esc(w.nextFollowUp||'')}" placeholder="Fri PM…" oninput="updW('${w.id}','nextFollowUp',this.value)"></td>
+      <td><span class="wait-days${dcls?' '+dcls:''}">${days}d</span></td>
+      <td><button class="icon-btn del" onclick="delW('${w.id}')">×</button></td>
+    </tr>`;
+  }).join('');
+}
+function addWait(){
+  S.waiting.push({id:uid(),what:'',nextFollowUp:'',addedDate:todayKey()});
+  save();renderWaiting();
+  if(!document.getElementById('sec-wait').classList.contains('open'))togColl('sec-wait');
+  setTimeout(()=>{const r=document.querySelectorAll('#wait-body .w-inp');if(r.length)r[r.length-3].focus();},30);
+}
+function updW(id,f,v){const w=S.waiting.find(x=>x.id===id);if(w){w[f]=v;save();}}
+function delW(id){S.waiting=S.waiting.filter(x=>x.id!==id);save();renderWaiting();}
+
+// ── BLOCKED ────────────────────────────────────────────────────────────────
+function renderBlocked() {
+  const card=document.getElementById('bcard');
+  const items=document.getElementById('bitems');
+  const abtn=document.getElementById('badd-btn');
+  card.style.display=S.blocked.length?'block':'none';
+  if(!S.blocked.length)return;
+  items.innerHTML=S.blocked.map(b=>`
+    <div class="bitem">
+      <span class="bdot"></span>
+      <span class="btext">${esc(b.text)}</span>
+      <button class="icon-btn del" onclick="delB('${b.id}')">×</button>
+    </div>`).join('');
+  if(abtn)abtn.style.display=S.blocked.length>=3?'none':'';
+}
+function showBlockedInput(){
+  if(S.blocked.length>=3)return;
+  document.getElementById('bcard').style.display='block';
+  document.getElementById('badd-zone').style.display='block';
+  document.getElementById('badd-inp').focus();
+}
+function blockedKey(e){
+  if(e.key==='Enter'){const v=e.target.value.trim();if(v&&S.blocked.length<3)S.blocked.push({id:uid(),text:v});e.target.value='';document.getElementById('badd-zone').style.display='none';save();renderBlocked();}
+  if(e.key==='Escape'){e.target.value='';document.getElementById('badd-zone').style.display='none';}
+}
+function blockedBlur(){
+  const v=document.getElementById('badd-inp').value.trim();
+  if(v&&S.blocked.length<3)S.blocked.push({id:uid(),text:v});
+  document.getElementById('badd-inp').value='';
+  document.getElementById('badd-zone').style.display='none';
+  save();renderBlocked();
+}
+function delB(id){S.blocked=S.blocked.filter(b=>b.id!==id);save();renderBlocked();}
+
+// ── DONE TODAY ────────────────────────────────────────────────────────────
+function renderDone() {
+  const body  = document.getElementById('done-body');
+  const badge = document.getElementById('badge-done');
+  const sumEl = document.getElementById('done-summary');
+
+  badge.textContent = S.doneToday.length;
+  badge.className   = 'cbadge done-hot';
+
+  const outcomeDone = S.doneToday.filter(d=>d.text.startsWith('★')).length;
+  sumEl.innerHTML = S.doneToday.length ? `
+    <span class="done-sum-item"><strong>${S.doneToday.length}</strong> completed today</span>
+    ${outcomeDone?`<span class="done-sum-item"><strong>${outcomeDone}</strong> outcome${outcomeDone!==1?'s':''} achieved</span>`:''}
+  ` : '';
+
+  if (!S.doneToday.length) { body.innerHTML='<div class="empty">No movement yet.</div>'; return; }
+  body.innerHTML = S.doneToday.map(d=>`
+    <div class="done-item">
+      <span class="done-check">✓</span>
+      <span class="done-text">${esc(d.text)}</span>
+      <span class="done-time">${d.time||''}</span>
+    </div>`).join('');
+}
+function clearDone(){S.doneToday=[];save();renderDone();renderProgress();}
+
+// ── FOLLOW UPS TODAY ──────────────────────────────────────────────────────
+function renderFollowUps() {
+  const list  = document.getElementById('followup-list');
+  const prog  = document.getElementById('followup-progress');
+  const addEl = document.getElementById('followup-add');
+  const items = S.followUps || [];
+  const done  = items.filter(x=>x.done).length;
+  prog.textContent = done + ' / 3';
+  addEl.style.display = items.length >= 3 ? 'none' : 'block';
+
+  if (!items.length) { list.innerHTML = ''; return; }
+  list.innerHTML = items.map(f=>`
+    <div class="outcome-item${f.done?' done':''}">
+      <input type="checkbox" class="outcome-cb" ${f.done?'checked':''} onchange="followupCheck('${f.id}',this.checked)">
+      <span class="outcome-text">${esc(f.text)}</span>
+      <button class="icon-btn del" onclick="followupDel('${f.id}')">×</button>
+    </div>`).join('');
+}
+function followupKey(e) {
+  if (e.key !== 'Enter') return;
+  const v = e.target.value.trim();
+  if (!v || (S.followUps||[]).length >= 3) return;
+  if (!S.followUps) S.followUps = [];
+  S.followUps.push({ id: uid(), text: v, done: false });
+  e.target.value = ''; save(); renderFollowUps();
+}
+function followupCheck(id, checked) {
+  const f = (S.followUps||[]).find(x=>x.id===id);
+  if (!f) return;
+  f.done = checked;
+  save(); renderFollowUps();
+}
+function followupDel(id) {
+  S.followUps = (S.followUps||[]).filter(x=>x.id!==id);
+  save(); renderFollowUps();
+}
+
+// ── COLLAPSIBLES ───────────────────────────────────────────────────────────
+function togColl(id) { document.getElementById(id).classList.toggle('open'); }
+
+// ── NEW DAY ────────────────────────────────────────────────────────────────
+let _nd='carry';
+function openNewDay(){ _nd='carry';selNd('carry');document.getElementById('ndModal').classList.add('open'); }
+function closeNewDay(){ document.getElementById('ndModal').classList.remove('open'); }
+function selNd(v){ _nd=v;document.getElementById('nd-carry').classList.toggle('sel',v==='carry');document.getElementById('nd-fresh').classList.toggle('sel',v==='fresh'); }
+
+function confirmNewDay() {
+  const today = todayKey();
+  const hist  = JSON.parse(localStorage.getItem('rct_hist')||'[]');
+  if (!hist.find(h=>h.date===today)) {
+    hist.unshift({date:today,data:JSON.parse(JSON.stringify(S))});
+    localStorage.setItem('rct_hist',JSON.stringify(hist.slice(0,60)));
+  }
+  const tmr = S.tomorrowFirst;
+  if (_nd==='carry') {
+    const q  = S.queueToday.filter(x=>!x.done);
+    const w  = S.waiting;
+    const b  = S.blocked;
+    S = def();
+    S.queueToday = q;
+    S.waiting    = w;
+    S.blocked    = b;
+    if (tmr) { S.queueToday.unshift({id:uid(),text:tmr,done:false,updated:fmtTime()}); }
+  } else { S = def(); }
+  save(); renderAll();
+  if (tmr) showTmrBanner(tmr);
+  closeNewDay();
+}
+
+// ── KEYBOARD ──────────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key==='Escape' && document.getElementById('ndModal').classList.contains('open')) { closeNewDay(); return; }
+  if ((e.metaKey||e.ctrlKey) && e.key==='s') { e.preventDefault(); manualSave(); }
+});
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+load();
+renderAll();
+</script>
+</body>
+</html>
